@@ -1,0 +1,97 @@
+<!-- index.html -->
+<!DOCTYPE html>
+<html>
+<head>
+    <title>LAN Chat</title>
+    <script src="/socket.io/socket.io.js"></script>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <link rel="stylesheet" href="style.css" />
+    <script>
+        const socket = io();
+
+        function handleModal(event){
+            event.preventDefault(); // Prevent form submission
+            const username = document.getElementById('user').value;
+            document.querySelector('.user-info-modal').style.display = 'none'; // Hide the modal
+            document.querySelector('.chat-container').style.display = 'block'; // Show the chat container
+            document.getElementById('message').placeholder = `Type here, ${username}...`; // Set the placeholder
+            socket.emit('user joined', `${username} joined the chat`); // Emit 'user joined' event
+        }
+        
+    
+        function sendMessage() {
+            var msg = document.getElementById('message').value;
+            const username = document.getElementById('user').value;
+            const messageElement = createChatMessageElement(username, msg, username);
+            document.getElementById('messages').appendChild(messageElement);
+            socket.emit('chat message', msg, username);
+            document.getElementById('message').value = '';
+        }
+        
+        socket.on('chat message', (msg, username) => {
+            const currentuser = document.getElementById('user').value;
+            if (username !== currentuser) {
+                const messageElement = createChatMessageElement(username, msg, currentuser);
+                document.getElementById('messages').appendChild(messageElement);
+            }
+        });
+        
+        
+        
+        function createChatMessageElement(sender, text, currentUser) {
+            const messageElement = document.createElement('div');
+            messageElement.classList.add('message');
+            if (sender === currentUser) {
+                messageElement.classList.add('blue-bg');
+            } else {
+                messageElement.classList.add('gray-bg');
+            }
+            messageElement.innerHTML = `
+                <div class="message-sender">${sender}</div>
+                <div class="message-text">${text}</div>
+                <div class="message-timestamp">${new Date().toLocaleTimeString()}</div>
+            `;
+            return messageElement;
+        }
+
+        function removeChat(){
+            document.getElementById('messages').innerHTML = '';
+        }
+
+        socket.on('user joined', (message) => {
+            alert(message);
+        });
+
+        
+        
+    </script>
+    
+</head>
+<body>
+
+    <div class="user-info-modal">
+        <div class="modal-content">
+          <h2 class="modal-header">Enter your username and join</h2>
+          <div class="modal-content">
+            This application is a simple LAN (Local Area Network) chat application built using HTML, CSS, JavaScript, and Socket.IO.
+            The application uses Socket.IO to establish a WebSocket connection between the client and the server, enabling real-time, bidirectional communication. Messages sent by one user are broadcasted to all connected users, allowing for a seamless chat experience.         </div>
+          <form class="user-info-form">
+            <input name="username" id="user" type="text" required placeholder="Username" />
+            <button type="submit" class="button join-button" id="join-button" onclick="handleModal(event)">Join</button>
+        </form>
+        </div>
+      </div>
+
+      <div class="chat-container">
+        <h2 class="chat-header">Welcome to the Lan messenger......</h2>
+        <div id="messages" class="chat-messages"></div>
+  
+        <form class="chat-input-form">
+          <input type="text" class="chat-input" id="message" required placeholder="Type here, John..." />
+          <button type="submit" onclick="sendMessage()" class="button send-button">Send</button>
+        </form>
+        <button id="clear-chat" class="button clear-chat-button" onclick="removeChat()">Clear Chat</button>
+    </div>
+
+</body>
+</html>
